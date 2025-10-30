@@ -53,24 +53,17 @@ body, .stApp {
     border: 1px solid #ccc !important;
 }
 
- 
-/* Buttons - More Visible & Modern */
+/* Buttons */
 .stButton > button, .stDownloadButton > button {
-    background-color: #0078ff !important;   /* Bright blue */
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ccc !important;
     font-weight: 600 !important;
-    padding: 10px 20px !important;
-    box-shadow: 0 2px 6px rgba(0, 120, 255, 0.3) !important;
-    transition: all 0.2s ease-in-out !important;
+    opacity: 1 !important;
 }
 .stButton > button:hover, .stDownloadButton > button:hover {
-    background-color: #005fd1 !important;
-    box-shadow: 0 4px 10px rgba(0, 120, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
+    background-color: #f5f5f5 !important;
 }
-
 
 /* Radio buttons */
 .stRadio label, .stRadio div[role="radiogroup"] > label, .stRadio p {
@@ -175,28 +168,16 @@ with col2:
     spare_part_dict = dict(zip(spare_df["Material"].astype(str), spare_df["Material Description"].astype(str)))
 
     # Use unique key for selectbox
-    try:
-        selected_spare = st.selectbox(
-            "Spare Part Code",
-            options=[""] + spare_part_codes,
-            index=spare_part_codes.index(data_dict.get("Spare Part Code", "")) + 1
-            if data_dict.get("Spare Part Code", "") in spare_part_codes else 0,
-            key="Spare Part Code Select"
-        )
-    except Exception as e:
-        selected_spare = ""
-        print(f"[DEBUG] Error in selectbox: {e}")  # Logs to console
-        st.info("⚠ Something went wrong while loading Spare Part options. Please retry.")
-
+    selected_spare = st.selectbox(
+        "Spare Part Code",
+        options=[""] + spare_part_codes,
+        index=spare_part_codes.index(data_dict.get("Spare Part Code", "")) + 1
+        if data_dict.get("Spare Part Code", "") in spare_part_codes else 0,
+        key="Spare Part Code Select"
+    )
 
     # Sync value back into the field
-    selected_spare = st.selectbox("Select Spare Part", [""] + spare_part_codes)
-
-    if selected_spare:
-        data_dict["Spare Part Code"] = selected_spare
-    else:
-        data_dict["Spare Part Code"] = None
-
+    data_dict["Spare Part Code"] = selected_spare
     if selected_spare:
         data_dict["Product Description"] = spare_part_dict.get(selected_spare, "")
 
