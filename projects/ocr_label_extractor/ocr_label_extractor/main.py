@@ -175,13 +175,19 @@ with col2:
     spare_part_dict = dict(zip(spare_df["Material"].astype(str), spare_df["Material Description"].astype(str)))
 
     # Use unique key for selectbox
-    selected_spare = st.selectbox(
-        "Spare Part Code",
-        options=[""] + spare_part_codes,
-        index=spare_part_codes.index(data_dict.get("Spare Part Code", "")) + 1
-        if data_dict.get("Spare Part Code", "") in spare_part_codes else 0,
-        key="Spare Part Code Select"
-    )
+    try:
+        selected_spare = st.selectbox(
+            "Spare Part Code",
+            options=[""] + spare_part_codes,
+            index=spare_part_codes.index(data_dict.get("Spare Part Code", "")) + 1
+            if data_dict.get("Spare Part Code", "") in spare_part_codes else 0,
+            key="Spare Part Code Select"
+        )
+    except Exception as e:
+        selected_spare = ""
+        print(f"[DEBUG] Error in selectbox: {e}")  # Logs to console
+        st.info("⚠ Something went wrong while loading Spare Part options. Please retry.")
+
 
     # Sync value back into the field
     data_dict["Spare Part Code"] = selected_spare
