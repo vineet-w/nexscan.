@@ -4,9 +4,7 @@ pillow
 google-generativeai
 python-dotenv
 pandas
-openpyxl 
-  
-  
- 
-  
-  
+openpyxl
+gunicorn
+requests
+
