@@ -190,7 +190,13 @@ with col2:
 
 
     # Sync value back into the field
-    data_dict["Spare Part Code"] = selected_spare
+    selected_spare = st.selectbox("Select Spare Part", spare_list)
+
+    if selected_spare:
+        data_dict["Spare Part Code"] = selected_spare
+    else:
+        data_dict["Spare Part Code"] = None
+
     if selected_spare:
         data_dict["Product Description"] = spare_part_dict.get(selected_spare, "")
 
