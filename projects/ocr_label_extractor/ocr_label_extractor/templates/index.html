@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Label OCR Autofill</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+    }
+    #form {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    #preview {
+      width: 300px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    #preview img {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="preview">
+    <h3>Capture or Upload Image</h3>
+    <input type="file" id="file" accept="image/*" capture="camera">
+    <img id="imgPreview" style="display:none;">
+  </div>
+
+  <div id="form">
+    <h3>Extracted Data</h3>
+    <input id="bccd" placeholder="BCCD Name">
+    <input id="branch" placeholder="Branch">
+    <input id="prod_desc" placeholder="Product Description">
+    <input id="prod_sr" placeholder="Product Sr No">
+    <input id="dop" placeholder="Date of Purchase">
+    <button id="extractBtn">Extract & Autofill</button>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file');
+    const preview = document.getElementById('imgPreview');
+    const extractBtn = document.getElementById('extractBtn');
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+      }
+    });
+
+    extractBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please upload or capture an image first!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("/extract", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        const data = result.data;
+        document.getElementById("bccd").value = data["BCCD Name"] || "";
+        document.getElementById("branch").value = data["Branch"] || "";
+        document.getElementById("prod_desc").value = data["Product Description"] || "";
+        document.getElementById("prod_sr").value = data["Product Sr No"] || "";
+        document.getElementById("dop").value = data["Date of Purchase"] || "";
+      } else {
+        alert("Error: " + result.message);
+      }
+    });
+  </script>
+</body>
+</html>
