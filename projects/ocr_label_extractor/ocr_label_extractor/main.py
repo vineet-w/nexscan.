@@ -13,111 +13,121 @@ model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 EXCEL_FILE = "labels_extended.xlsx"
 COLUMNS = [
-    "BCCD Name", "Branch", "Product Description", "Product Sr No", "Date of Purchase",
-    "Complaint No", "Spare Part Code", "Nature of Defect", "Technician Name", "Manufactured Date"
+    "BCCD Name",
+    "Branch",
+    "Product Description",
+    "Product Sr No",
+    "Date of Purchase",
+    "Complaint No",
+    "Spare Part Code",
+    "Nature of Defect",
+    "Technician Name",
+    "Manufactured Date"
 ]
 
 # Create Excel file if not exists
 if not os.path.exists(EXCEL_FILE):
     pd.DataFrame(columns=COLUMNS).to_excel(EXCEL_FILE, index=False)
 
-# ===================== STREAMLIT CONFIG =====================
-st.set_page_config(
-    page_title="NexScan Label Extractor",
-    layout="wide",
-    page_icon="🧾"
-)
+# ===================== STREAMLIT UI =====================
+st.set_page_config(page_title="Label Extractor", layout="wide")
 
-# ===== Custom CSS =====
 st.markdown("""
 <style>
 body, .stApp {
-    background: linear-gradient(135deg, #f8f9ff, #eef2ff);
-    font-family: 'Segoe UI', sans-serif;
-    color: #1a1a1a;
+    background-color: white !important;
+    color: black !important;
 }
 
-/* Headings */
-h1, h2, h3 {
-    color: #1a1a1a;
-    font-weight: 700;
+/* Global text styles */
+.stMarkdown, .stText, .stTextInput label, .stSelectbox label, label, p, span {
+    color: black !important;
+    opacity: 1 !important;
+    font-weight: 500 !important;
 }
 
-/* Buttons */
-.stButton > button {
-    background: linear-gradient(90deg, #0052cc, #007bff);
+/* Text and select inputs */
+.stTextInput input, .stSelectbox div[data-baseweb="select"] {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ccc !important;
+}
+
+ 
+/* Buttons - More Visible & Modern */
+.stButton > button, .stDownloadButton > button {
+    background-color: #0078ff !important;   /* Bright blue */
     color: white !important;
     border: none !important;
-    border-radius: 8px;
-    font-weight: 600;
-    padding: 0.5em 1.2em;
-    transition: all 0.2s ease-in-out;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    box-shadow: 0 2px 6px rgba(0, 120, 255, 0.3) !important;
+    transition: all 0.2s ease-in-out !important;
 }
-.stButton > button:hover {
-    background: linear-gradient(90deg, #0041a8, #0060e0);
-    transform: scale(1.03);
-}
-
-/* Inputs */
-.stTextInput input {
-    border: 1px solid #ccc !important;
-    border-radius: 6px;
-    background-color: white !important;
-    padding: 0.4em !important;
+.stButton > button:hover, .stDownloadButton > button:hover {
+    background-color: #005fd1 !important;
+    box-shadow: 0 4px 10px rgba(0, 120, 255, 0.4) !important;
+    transform: translateY(-2px) !important;
 }
 
-/* File uploader */
+
+/* Radio buttons */
+.stRadio label, .stRadio div[role="radiogroup"] > label, .stRadio p {
+    color: black !important;
+}
+
+/* ===== Fix for file uploader visibility ===== */
 [data-testid="stFileUploader"] section {
-    background-color: #ffffff;
-    border: 2px dashed #007bff;
-    border-radius: 10px;
-    padding: 1.5em;
-    color: #333;
+    background-color: #f9f9f9 !important;  /* Light gray background */
+    border: 1px dashed #999 !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    color: #333 !important;
 }
 [data-testid="stFileUploader"] section:hover {
-    background-color: #f0f6ff;
+    background-color: #f0f0f0 !important;
+}
+[data-testid="stFileUploader"] div {
+    color: #333 !important;
+    font-weight: 500 !important;
+}
+[data-testid="stFileUploader"] button {
+    background-color: #ffffff !important;
+    color: #000 !important;
+    border: 1px solid #888 !important;
+    font-weight: 600 !important;
+}
+[data-testid="stFileUploader"] button:hover {
+    background-color: #f2f2f2 !important;
 }
 
-/* Hide full traceback errors */
-.stAlert {
-    display: none !important;
-}
-
-/* Text area */
-textarea {
-    border-radius: 8px !important;
-    border-color: #ccc !important;
-}
-
-/* Subtle divider */
-hr {
-    border: 0;
-    height: 1px;
-    background: #ccc;
-    margin: 1em 0;
+/* Upload text contrast */
+[data-testid="stFileUploader"] small {
+    color: #555 !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ===================== APP UI =====================
-st.title("🧾 NexScan – Smart Label Extractor")
-st.caption("Extract, verify, and save product label details with AI-powered precision.")
+# ===================== APP TITLE =====================
+st.title("NexScan")
 
 col1, col2 = st.columns(2)
 
-# ---- IMAGE INPUT ----
+# ---- IMAGE INPUT SECTION ----
 with col1:
-    st.subheader("📸 Capture or Upload Label Image")
-    option = st.radio("Choose input method:", ["Capture from Webcam", "Upload Image"])
-    picture = None
+    st.subheader("Capture or Upload Label Image")
+    option = st.radio("Choose input method:", [" Capture from Webcam", " Upload Image"])
 
-    if option == "Capture from Webcam":
-        picture = st.camera_input("Take a picture")
+    picture = None
+    if option == " Capture from Webcam":
+        picture = st.camera_input("Take a picture using your webcam")
     else:
         uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
         if uploaded_file is not None:
             picture = uploaded_file
 
+    # ---- HANDLE IMAGE INPUT SAFELY ----
     image_path = None
     if picture is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
@@ -127,26 +137,21 @@ with col1:
         st.info("Please capture or upload an image to proceed.")
 
 # ---- PROCESS IMAGE ----
-extracted_text = ""
-data_dict = {}
-
 if image_path is not None:
-    try:
-        with open(image_path, "rb") as img_file:
-            img = Image.open(img_file)
-            with st.spinner("🔍 Extracting text from image... Please wait"):
-                prompt = """Extract all visible text exactly as it appears in the image.
-                Do NOT translate or interpret. Return only the raw text."""
-                response = model.generate_content([prompt, img])
-                extracted_text = response.text.strip() if response.text else "No text detected."
-            st.text_area("📝 Extracted Text:", extracted_text, height=150)
-    except Exception:
-        st.warning("⚠️ Something went wrong while processing the image. Please try again.")
-        extracted_text = ""
+    with open(image_path, "rb") as img_file:
+        img = Image.open(img_file)
+        prompt = """Extract all visible text exactly as it appears in the image.
+Do NOT translate, summarize, or interpret.
+Return the text exactly in the original language."""
+        
+        response = model.generate_content([prompt, img])
+        extracted_text = response.text.strip() if response.text else "No text detected."
+        st.text_area("Extracted Text (Raw):", extracted_text, height=150)
 
-# ---- MAP EXTRACTED TEXT ----
-if extracted_text:
+    # ---- AUTO MAP EXTRACTED TEXT TO FIELDS ----
+    data_dict = {}
     lines = [line.strip() for line in extracted_text.splitlines() if line.strip()]
+
     for col in COLUMNS:
         found_line = next((line for line in lines if col.lower() in line.lower()), None)
         if found_line:
@@ -157,11 +162,10 @@ if extracted_text:
         else:
             data_dict[col] = ""
 
-# ---- RIGHT COLUMN ----
 with col2:
-    st.subheader("🧮 Verify & Save Extracted Data")
+    st.subheader("Verify and Save Extracted Data")
 
-    # Load spare part mapping
+    # Load spare parts mapping
     try:
         spare_df = pd.read_excel("spare_parts.xlsx")
     except FileNotFoundError:
@@ -170,6 +174,7 @@ with col2:
     spare_part_codes = spare_df["Material"].astype(str).tolist()
     spare_part_dict = dict(zip(spare_df["Material"].astype(str), spare_df["Material Description"].astype(str)))
 
+    # Use unique key for selectbox
     selected_spare = st.selectbox(
         "Spare Part Code",
         options=[""] + spare_part_codes,
@@ -178,34 +183,40 @@ with col2:
         key="Spare Part Code Select"
     )
 
+    # Sync value back into the field
     data_dict["Spare Part Code"] = selected_spare
     if selected_spare:
         data_dict["Product Description"] = spare_part_dict.get(selected_spare, "")
 
+    # ---- Input fields ----
     inputs = {}
     for col in COLUMNS:
+        # skip spare part code because it's handled by dropdown
         if col == "Spare Part Code":
             inputs[col] = data_dict["Spare Part Code"]
         else:
             inputs[col] = st.text_input(col, data_dict.get(col, ""), key=f"{col}_input")
 
-    # ---- SAVE FUNCTION ----
+    # ---- SAVE TO EXCEL FUNCTION ----
     def save_to_excel():
+        new_data = pd.DataFrame([inputs])
         try:
-            new_data = pd.DataFrame([inputs])
-            old_data = pd.read_excel(EXCEL_FILE) if os.path.exists(EXCEL_FILE) else pd.DataFrame(columns=COLUMNS)
-            updated = pd.concat([old_data, new_data], ignore_index=True)
+            old_data = pd.read_excel(EXCEL_FILE)
+        except FileNotFoundError:
+            old_data = pd.DataFrame(columns=COLUMNS)
+
+        updated = pd.concat([old_data, new_data], ignore_index=True)
+        try:
             updated.to_excel(EXCEL_FILE, index=False)
-            st.success("✅ Data saved successfully!")
+            st.success(f"✅ Data saved to {EXCEL_FILE}")
             st.dataframe(updated.tail(5))
         except PermissionError:
-            st.error("❌ Please close the Excel file before saving.")
-        except Exception:
-            st.warning("⚠️ Could not save data. Please try again.")
+            st.error("❌ Please close the Excel file before saving new entries.")
 
     if st.button("💾 Save to Excel"):
         save_to_excel()
 
+    # ---- DOWNLOAD BUTTON ----
     if os.path.exists(EXCEL_FILE):
         with open(EXCEL_FILE, "rb") as f:
             st.download_button(
